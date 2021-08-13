@@ -4,7 +4,11 @@ version = "0.1.0"
 authors = ["Terry Raimondo <terry.raimondo@gmail.com>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
+keywords = ["diesel", "pagination", "filter", "json", "rocket"]
 description = "Procedural macros for Diesel filter"
+homepage = "https://github.com/terry90/diesel_filter"
+repository = "https://github.com/terry90/diesel_filter"
+readme = "../README.md"
 
 [features]
 rocket = []
