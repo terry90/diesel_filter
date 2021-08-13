@@ -3,6 +3,7 @@ name = "diesel_filter_query"
 version = "0.1.0"
 authors = ["Terry Raimondo <terry.raimondo@gmail.com>"]
 edition = "2018"
+license = "MIT OR Apache-2.0"
 
 [features]
 rocket = []
@@ -11,9 +12,6 @@ rocket = []
 syn = { version = "1.0.74", features = ["parsing"] }
 quote = "1.0.9"
 proc-macro2 = "1.0.28"
-
-
-# uuid = { version = "0.8.2", features = ["serde"] }
 
 [lib]
 proc-macro = true

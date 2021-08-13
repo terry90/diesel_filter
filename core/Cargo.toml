@@ -3,6 +3,9 @@ name = "diesel_filter"
 version = "0.1.0"
 authors = ["Terry Raimondo <terry.raimondo@gmail.com>"]
 edition = "2018"
+license = "MIT OR Apache-2.0"
+keywords = ["diesel", "pagination", "filter", "json", "rocket"]
+description= "Diesel filter is a quick way to add filters and pagination to your diesel models"
 
 [features]
 serialize = ["serde"]
