@@ -1,0 +1,19 @@
+[package]
+name = "diesel_filter_query"
+version = "0.1.0"
+authors = ["Terry Raimondo <terry.raimondo@gmail.com>"]
+edition = "2018"
+
+[features]
+rocket = []
+
+[dependencies]
+syn = { version = "1.0.74", features = ["parsing"] }
+quote = "1.0.9"
+proc-macro2 = "1.0.28"
+
+
+# uuid = { version = "0.8.2", features = ["serde"] }
+
+[lib]
+proc-macro = true
