@@ -5,7 +5,7 @@ authors = ["Terry Raimondo <terry.raimondo@gmail.com>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
 keywords = ["diesel", "pagination", "filter", "json", "rocket"]
-description= "Diesel filter is a quick way to add filters and pagination to your diesel models"
+description = "Diesel filter is a quick way to add filters and pagination to your diesel models"
 
 [features]
 serialize = ["serde"]
@@ -13,6 +13,6 @@ pagination = ["diesel"]
 rocket = ["diesel_filter_query/rocket"]
 
 [dependencies]
-diesel_filter_query = { path = "../query" }
+diesel_filter_query = { path = "../query", version = "0.1" }
 serde = { version = "1.0", optional = true }
 diesel = { version = "1.4", optional = true }
