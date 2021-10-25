@@ -14,7 +14,7 @@ struct Filter {
 enum FilterableType {
     String,
     Uuid,
-    Unknown(String),
+    Foreign(String),
 }
 
 enum FilterKind {
@@ -60,7 +60,7 @@ impl From<&TypePath> for FilterableType {
             "Option<String>" => Self::String,
             "Option<Uuid>" => Self::Uuid,
             "Option<uuid::Uuid>" => Self::Uuid,
-            other => Self::Unknown(other.to_string()),
+            other => Self::Foreign(other.to_string()),
         }
     }
 }
@@ -70,7 +70,7 @@ impl Into<Ident> for FilterableType {
         match self {
             FilterableType::String => Ident::new("String", Span::call_site()),
             FilterableType::Uuid => Ident::new("Uuid", Span::call_site()),
-            FilterableType::Unknown(ty) => panic!("the type {} is not supported", ty),
+            FilterableType::Foreign(ty) => Ident::new(&ty, Span::call_site()),
         }
     }
 }

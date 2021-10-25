@@ -40,13 +40,13 @@ A struct for the filtering data will be generated with the name [YourStructName]
 Two methods will be generated (let's keep `Project` as an example):
 
 ```rust
-pub fn filter<'a>(filters: &'a ProjectFilters) -> #table_name::BoxedQuery<'a, diesel::pg::Pg>
+pub fn filter<'a>(filters: &'a ProjectFilters) -> BoxedQuery<'a, Pg>
 ```
 
 and
 
 ```rust
-pub fn filtered(filters: &ProjectFilters, conn: &PgConnection) -> Result<Vec<Project>, diesel::result::Error>
+pub fn filtered(filters: &ProjectFilters, conn: &PgConnection) -> Result<Vec<Project>, Error>
 ```
 
 The `filter` method can be used in conjunction with other diesel methods like `inner_join` and such.
@@ -60,7 +60,7 @@ Project::filter(&filters)
 
 ### With Rocket
 
-With the `rocket` feature, the generated struct can be obtain from the requests query parameters (dot notation `?filters.name=xxx`)
+With the `rocket` feature, the generated struct can be obtained from the request query parameters (dot notation `?filters.name=xxx`)
 
 ```rust
 use diesel_filter::PaginatedPayload;
@@ -91,7 +91,14 @@ Project::filter(&filters)
     .load_and_count::<ProjectResponse>(conn)
 ```
 
-These are independent of the `#[pagination]` annotation that you can add on your struct to add `page` and `per_page` to your generated filter struct.
+These are independent of the `#[pagination]` annotation that you can add on your struct to add `page` and `per_page` to your generated filter struct and change the signature of the `filtered` method.
+
+```rust
+#[derive(Queryable, DieselFilter)]
+#[table_name = "projects"]
+#[pagination]
+pub struct Project
+```
 
 To convert this into Json, with the feature flag `serialize` you can use `PaginatedPayload`.
 
