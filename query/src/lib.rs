@@ -1,6 +1,7 @@
 use proc_macro::TokenStream;
 use proc_macro2::{Ident, Span};
 use quote::{quote, ToTokens};
+use std::default::Default;
 use syn::{
     parse_macro_input, Data, DeriveInput, Fields, Lit, Meta, NestedMeta, Path, Type, TypePath,
 };
@@ -8,7 +9,7 @@ use syn::{
 struct Filter {
     pub name: Ident,
     pub ty: FilterableType,
-    pub kind: FilterKind,
+    pub opts: FilterOpts,
 }
 
 enum FilterableType {
@@ -24,7 +25,21 @@ enum FilterKind {
     SubstrInsensitive,
 }
 
-impl From<Vec<NestedMeta>> for FilterKind {
+struct FilterOpts {
+    multiple: bool,
+    kind: FilterKind,
+}
+
+impl Default for FilterOpts {
+    fn default() -> Self {
+        Self {
+            multiple: false,
+            kind: FilterKind::Basic,
+        }
+    }
+}
+
+impl From<Vec<NestedMeta>> for FilterOpts {
     fn from(m: Vec<NestedMeta>) -> Self {
         let meta = m
             .into_iter()
@@ -39,15 +54,20 @@ impl From<Vec<NestedMeta>> for FilterKind {
                 && tested.iter().all(|t| m.iter().any(|m| m.is_ident(t)))
         };
 
-        if matches(&meta, &["substring", "insensitive"]) {
-            return Self::SubstrInsensitive;
+        let kind = if matches(&meta, &["substring", "insensitive"]) {
+            FilterKind::SubstrInsensitive
         } else if matches(&meta, &["substring"]) {
-            return Self::Substr;
+            FilterKind::Substr
         } else if matches(&meta, &["insensitive"]) {
-            return Self::Insensitive;
-        }
+            FilterKind::Insensitive
+        } else {
+            FilterKind::Basic
+        };
 
-        Self::Basic
+        Self {
+            multiple: matches(&meta, &["multiple"]),
+            kind,
+        }
     }
 }
 
@@ -115,11 +135,11 @@ pub fn filter(input: TokenStream) -> TokenStream {
                                     if !attr.path.is_ident("filter") {
                                         continue;
                                     }
-                                    let kind = match attr.parse_meta().unwrap() {
-                                        Meta::List(te) => FilterKind::from(
+                                    let opts = match attr.parse_meta().unwrap() {
+                                        Meta::List(te) => FilterOpts::from(
                                             te.nested.into_iter().collect::<Vec<_>>(),
                                         ),
-                                        Meta::Path(_) => FilterKind::Basic,
+                                        Meta::Path(_) => FilterOpts::default(),
                                         _ => continue,
                                     };
 
@@ -127,7 +147,7 @@ pub fn filter(input: TokenStream) -> TokenStream {
                                         let ty = FilterableType::from(ty);
                                         let name = name.clone();
 
-                                        filters.push(Filter { name, ty, kind });
+                                        filters.push(Filter { name, ty, opts });
                                         continue;
                                     }
                                     panic!("this type is not supported");
@@ -155,41 +175,49 @@ pub fn filter(input: TokenStream) -> TokenStream {
             for filter in filters {
                 let field = filter.name;
                 let ty: Ident = filter.ty.into();
-                let kind = filter.kind;
+                let opts = filter.opts;
 
-                fields.push(quote! {
-                    pub #field: Option<#ty>,
-                });
-
-                match kind {
+                let q = match opts.kind {
                     FilterKind::Basic => {
-                        queries.push(quote! {
-                            if let Some(ref filter) = filters.#field {
-                                query = query.filter(#table_name::#field.eq(filter));
-                            }
-                        });
+                        quote! { #table_name::#field.eq(filter) }
                     }
                     FilterKind::Substr => {
-                        queries.push(quote! {
-                            if let Some(ref filter) = filters.#field {
-                                query = query.filter(#table_name::#field.like(format!("%{}%", filter)));
-                            }
-                        });
+                        quote! { #table_name::#field.like(format!("%{}%", filter)) }
                     }
                     FilterKind::Insensitive => {
-                        queries.push(quote! {
-                            if let Some(ref filter) = filters.#field {
-                                query = query.filter(#table_name::#field.ilike(filter));
-                            }
-                        });
+                        quote! { #table_name::#field.ilike(filter) }
                     }
                     FilterKind::SubstrInsensitive => {
-                        queries.push(quote! {
-                            if let Some(ref filter) = filters.#field {
-                                query = query.filter(#table_name::#field.ilike(format!("%{}%", filter)));
-                            }
-                        });
+                        quote! { #table_name::#field.ilike(format!("%{}%", filter)) }
                     }
+                };
+
+                if opts.multiple {
+                    fields.push(quote! {
+                        pub #field: Option<Vec<#ty>>,
+                    });
+                    queries.push(quote! {
+                        if let Some(ref filters) = filters.#field {
+                            let mut filters = filters.iter();
+
+                            if let Some(filter) = filters.next() {
+                                query = query.filter(#q);
+
+                                for filter in filters {
+                                    query = query.or_filter(#q);
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    fields.push(quote! {
+                        pub #field: Option<#ty>,
+                    });
+                    queries.push(quote! {
+                        if let Some(ref filter) = filters.#field {
+                            query = query.filter(#q);
+                        }
+                    });
                 }
             }
 
