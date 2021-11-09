@@ -49,10 +49,8 @@ impl From<Vec<NestedMeta>> for FilterOpts {
             })
             .collect::<Vec<_>>();
 
-        let matches = |m: &Vec<Path>, tested: &[&str]| {
-            m.iter().all(|m| tested.iter().any(|t| m.is_ident(t)))
-                && tested.iter().all(|t| m.iter().any(|m| m.is_ident(t)))
-        };
+        let matches =
+            |m: &Vec<Path>, tested: &[&str]| tested.iter().all(|t| m.iter().any(|m| m.is_ident(t)));
 
         let kind = if matches(&meta, &["substring", "insensitive"]) {
             FilterKind::SubstrInsensitive
@@ -172,55 +170,70 @@ pub fn filter(input: TokenStream) -> TokenStream {
 
             let mut fields = vec![];
             let mut queries = vec![];
+            let mut uses = vec![];
+            let mut has_multiple = false;
             for filter in filters {
                 let field = filter.name;
                 let ty: Ident = filter.ty.into();
                 let opts = filter.opts;
 
-                let q = match opts.kind {
-                    FilterKind::Basic => {
-                        quote! { #table_name::#field.eq(filter) }
-                    }
-                    FilterKind::Substr => {
-                        quote! { #table_name::#field.like(format!("%{}%", filter)) }
-                    }
-                    FilterKind::Insensitive => {
-                        quote! { #table_name::#field.ilike(filter) }
-                    }
-                    FilterKind::SubstrInsensitive => {
-                        quote! { #table_name::#field.ilike(format!("%{}%", filter)) }
-                    }
-                };
-
-                if opts.multiple {
+                let q = if opts.multiple {
+                    has_multiple = true;
                     fields.push(quote! {
                         pub #field: Option<Vec<#ty>>,
                     });
-                    queries.push(quote! {
-                        if let Some(ref filters) = filters.#field {
-                            let mut filters = filters.iter();
-
-                            if let Some(filter) = filters.next() {
-                                query = query.filter(#q);
-
-                                for filter in filters {
-                                    query = query.or_filter(#q);
-                                }
+                    match opts.kind {
+                        FilterKind::Basic => {
+                            quote! { #table_name::#field.eq(any(filter)) }
+                        }
+                        FilterKind::Substr => {
+                            quote! {
+                                #table_name::#field.like(any(
+                                    filter.iter().map(|f| format!("%{}%", f)).collect::<Vec<_>>()
+                                ))
                             }
                         }
-                    });
+                        FilterKind::Insensitive => {
+                            quote! { #table_name::#field.ilike(any(filter)) }
+                        }
+                        FilterKind::SubstrInsensitive => {
+                            quote! {
+                                #table_name::#field.ilike(any(
+                                    filter.iter().map(|f| format!("%{}%", f)).collect::<Vec<_>>()
+                                ))
+                            }
+                        }
+                    }
                 } else {
                     fields.push(quote! {
                         pub #field: Option<#ty>,
                     });
-                    queries.push(quote! {
-                        if let Some(ref filter) = filters.#field {
-                            query = query.filter(#q);
+                    match opts.kind {
+                        FilterKind::Basic => {
+                            quote! { #table_name::#field.eq(filter) }
                         }
-                    });
-                }
+                        FilterKind::Substr => {
+                            quote! { #table_name::#field.like(format!("%{}%", filter)) }
+                        }
+                        FilterKind::Insensitive => {
+                            quote! { #table_name::#field.ilike(filter) }
+                        }
+                        FilterKind::SubstrInsensitive => {
+                            quote! { #table_name::#field.ilike(format!("%{}%", filter)) }
+                        }
+                    }
+                };
+
+                queries.push(quote! {
+                    if let Some(ref filter) = filters.#field {
+                        query = query.filter(#q);
+                    }
+                });
             }
 
+            if has_multiple {
+                uses.push(quote! { use diesel::dsl::any; })
+            }
             if pagination {
                 fields.push(quote! {
                     pub page: Option<i64>,
@@ -256,10 +269,9 @@ pub fn filter(input: TokenStream) -> TokenStream {
                                   .load_and_count::<#struct_name>(conn)
                             }
 
-                            pub fn filter<'a>(filters: &'a #filter_struct_ident) -> #table_name::BoxedQuery<'a, diesel::pg::Pg> {
-                                use crate::schema::#table_name;
-
-                                let mut query = #table_name::table.into_boxed();
+                            pub fn filter<'a>(filters: &'a #filter_struct_ident) -> crate::schema::#table_name::BoxedQuery<'a, diesel::pg::Pg> {
+                                #( #uses )*
+                                let mut query = crate::schema::#table_name::table.into_boxed();
 
                                 #( #queries )*
 
@@ -280,10 +292,9 @@ pub fn filter(input: TokenStream) -> TokenStream {
                                 Self::filter(filters).load::<#struct_name>(conn)
                             }
 
-                            pub fn filter<'a>(filters: &'a #filter_struct_ident) -> #table_name::BoxedQuery<'a, diesel::pg::Pg> {
-                                use crate::schema::#table_name;
-
-                                let mut query = #table_name::table.into_boxed();
+                            pub fn filter<'a>(filters: &'a #filter_struct_ident) -> crate::schema::#table_name::BoxedQuery<'a, diesel::pg::Pg> {
+                                #( #uses )*
+                                let mut query = crate::schema::#table_name::table.into_boxed();
 
                                 #( #queries )*
 
