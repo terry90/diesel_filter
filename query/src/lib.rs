@@ -179,6 +179,12 @@ pub fn filter(input: TokenStream) -> TokenStream {
 
                 let q = if opts.multiple {
                     has_multiple = true;
+                    #[cfg(feature = "rocket")]
+                    fields.push(quote! {
+                        #[field(default = Option::None)]
+                        pub #field: Option<Vec<#ty>>,
+                    });
+                    #[cfg(not(feature = "rocket"))]
                     fields.push(quote! {
                         pub #field: Option<Vec<#ty>>,
                     });
