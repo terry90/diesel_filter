@@ -1,10 +1,12 @@
 # Diesel Filter
 
 Diesel filter is a quick way to add filters and pagination to your diesel models.
+Works with `Diesel` and `Postgres`.
 
 ## Crate features
 
 - `rocket` Derives `FromForm` on the generated filter struct ([See this example](#with-rocket))
+- `actix` Derives `Deserialize` on the generated filter struct ([See this example](#with-actix))
 - `pagination` Adds the `Paginate` trait ([See this example](#with-pagination))
 - `serialize` with `pagination` Adds the `PaginatedPayload` trait that can directly be sent to your client
 
@@ -67,6 +69,26 @@ use diesel_filter::PaginatedPayload;
 
 #[get("/?<filters>")]
 async fn index(filters: ClientFilters, conn: DbConn) -> Result<Json<PaginatedPayload<Client>>, Error> {
+    Ok(Json(
+        conn.run(move |conn| Client::filtered(&filters, conn))
+            .await?
+            .into(),
+    ))
+}
+
+```
+
+### With Actix
+
+With the `actix` feature, the generated struct can be obtained from the request query parameters
+
+N.B: unlike the `rocket` integration, the query parameters must be sent unscopped. e.g `?field=xxx&other=1`
+
+```rust
+use diesel_filter::PaginatedPayload;
+
+#[get("/?<filters>")]
+async fn index(filters: web::Query(ClientFilters), conn: DbConn) -> Result<Json<PaginatedPayload<Client>>, Error> {
     Ok(Json(
         conn.run(move |conn| Client::filtered(&filters, conn))
             .await?

@@ -83,9 +83,9 @@ impl From<&TypePath> for FilterableType {
     }
 }
 
-impl Into<Ident> for FilterableType {
-    fn into(self) -> Ident {
-        match self {
+impl From<FilterableType> for Ident {
+    fn from(val: FilterableType) -> Self {
+        match val {
             FilterableType::String => Ident::new("String", Span::call_site()),
             FilterableType::Uuid => Ident::new("Uuid", Span::call_site()),
             FilterableType::Foreign(ty) => Ident::new(&ty, Span::call_site()),
@@ -162,7 +162,7 @@ pub fn filter(input: TokenStream) -> TokenStream {
                 struct_name.span(),
             );
 
-            if filters.len() == 0 {
+            if filters.is_empty() {
                 panic!(
                     "please annotate at least one field to filter with #[filter] on your struct"
                 );
@@ -249,14 +249,23 @@ pub fn filter(input: TokenStream) -> TokenStream {
 
             #[cfg(feature = "rocket")]
             let filters_struct = quote! {
-                #[derive(FromForm)]
+                #[derive(FromForm, Debug)]
                 pub struct #filter_struct_ident {
                     #( #fields )*
                 }
             };
 
-            #[cfg(not(feature = "rocket"))]
+            #[cfg(feature = "actix")]
             let filters_struct = quote! {
+                #[derive(serde::Deserialize, Debug)]
+                pub struct #filter_struct_ident {
+                    #( #fields )*
+                }
+            };
+
+            #[cfg(not(any(feature = "rocket", feature = "actix")))]
+            let filters_struct = quote! {
+                #[derive(Debug)]
                 pub struct #filter_struct_ident {
                     #( #fields )*
                 }
@@ -288,10 +297,7 @@ pub fn filter(input: TokenStream) -> TokenStream {
                 }
                 false => {
                     quote! {
-                        #[derive(FromForm)]
-                        pub struct #filter_struct_ident {
-                            #( #fields )*
-                        }
+                        #filters_struct
 
                         impl #struct_name {
                             pub fn filtered(filters: &#filter_struct_ident, conn: &PgConnection) -> Result<Vec<#struct_name>, diesel::result::Error> {
