@@ -31,7 +31,7 @@ dependencies = [
 
 [[package]]
 name = "diesel_filter"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "diesel",
  "diesel_filter_query",
@@ -40,7 +40,7 @@ dependencies = [
 
 [[package]]
 name = "diesel_filter_query"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "proc-macro2",
  "quote",
