@@ -67,7 +67,7 @@ With the `rocket` feature, the generated struct can be obtained from the request
 ```rust
 use diesel_filter::PaginatedPayload;
 
-#[get("/?<filters>")]
+#[get("/")]
 async fn index(filters: ClientFilters, conn: DbConn) -> Result<Json<PaginatedPayload<Client>>, Error> {
     Ok(Json(
         conn.run(move |conn| Client::filtered(&filters, conn))
