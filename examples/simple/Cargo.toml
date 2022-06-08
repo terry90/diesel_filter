@@ -1,0 +1,9 @@
+[package]
+name = "simple-example"
+version = "0.1.0"
+publish = false
+
+[dependencies]
+diesel_filter = { path = "../../core" }
+serde = { version = "1.0" }
+diesel = { version = "1.4", features = ["postgres"] }
