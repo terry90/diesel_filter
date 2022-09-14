@@ -3,7 +3,8 @@ use diesel::{
 };
 
 pub use diesel_filter_query::*;
-use serde::Serialize;
+
+#[cfg(feature = "serialize")]
 pub use serialize::*;
 
 pub const DEFAULT_PER_PAGE: i64 = 10;
