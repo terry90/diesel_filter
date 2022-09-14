@@ -3,6 +3,8 @@ use diesel::{
 };
 
 pub use diesel_filter_query::*;
+
+#[cfg(feature = "serialize")]
 pub use serialize::*;
 
 pub const DEFAULT_PER_PAGE: i64 = 10;
@@ -39,10 +41,12 @@ pub trait Paginate: Sized {
 
 impl<T> Paginate for T {
     fn paginate(self, page: Option<i64>) -> Paginated<Self> {
+        let page = page.unwrap_or(1);
         Paginated {
             query: self,
             per_page: DEFAULT_PER_PAGE,
-            page: page.unwrap_or(1),
+            page: page,
+            offset: (page - 1) * DEFAULT_PER_PAGE,
         }
     }
 }
@@ -51,25 +55,29 @@ impl<T> Paginate for T {
 pub struct Paginated<T> {
     query: T,
     page: i64,
+    offset: i64,
     per_page: i64,
 }
 
 impl<T> Paginated<T> {
     pub fn per_page(self, per_page: Option<i64>) -> Self {
+        let per_page = per_page.unwrap_or(DEFAULT_PER_PAGE);
         Paginated {
-            per_page: per_page.unwrap_or(DEFAULT_PER_PAGE),
+            per_page,
+            offset: (self.page - 1) * self.per_page,
             ..self
         }
     }
 
-    pub fn load_and_count<U>(self, conn: &PgConnection) -> QueryResult<(Vec<U>, i64)>
+    pub fn load_and_count<'a, U>(self, conn: &mut PgConnection) -> QueryResult<(Vec<U>, i64)>
     where
-        Self: LoadQuery<PgConnection, (U, i64)>,
+        Self: LoadQuery<'a, PgConnection, (U, i64)>,
     {
         let results = self.load::<(U, i64)>(conn)?;
         let total = results.get(0).map(|x| x.1).unwrap_or(0);
         let records = results.into_iter().map(|x| x.0).collect();
-        Ok((records, total))
+        let total_pages = total as i64;
+        Ok((records, total_pages))
     }
 }
 
@@ -83,14 +91,13 @@ impl<T> QueryFragment<Pg> for Paginated<T>
 where
     T: QueryFragment<Pg>,
 {
-    fn walk_ast(&self, mut out: AstPass<Pg>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
         out.push_sql("SELECT *, COUNT(*) OVER () FROM (");
         self.query.walk_ast(out.reborrow())?;
         out.push_sql(") t LIMIT ");
         out.push_bind_param::<BigInt, _>(&self.per_page)?;
         out.push_sql(" OFFSET ");
-        let offset = (self.page - 1) * self.per_page;
-        out.push_bind_param::<BigInt, _>(&offset)?;
+        out.push_bind_param::<BigInt, _>(&self.offset)?;
         Ok(())
     }
 }

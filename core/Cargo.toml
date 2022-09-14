@@ -1,6 +1,6 @@
 [package]
 name = "diesel_filter"
-version = "0.1.2"
+version = "1.0.0"
 authors = ["Terry Raimondo <terry.raimondo@gmail.com>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
@@ -15,8 +15,9 @@ serialize = ["serde"]
 pagination = ["diesel"]
 rocket = ["diesel_filter_query/rocket"]
 actix = ["diesel_filter_query/actix"]
+axum = ["diesel_filter_query/axum"]
 
 [dependencies]
-diesel_filter_query = { path = "../query", version = ">=0.1.4" }
+diesel_filter_query = { path = "../query", version = ">=1.0.0" }
 serde = { version = "1.0", optional = true }
-diesel = { version = "1.4", optional = true }
+diesel = { version = "2.0.0", optional = true }
