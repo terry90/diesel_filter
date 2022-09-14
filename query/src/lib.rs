@@ -284,7 +284,7 @@ pub fn filter(input: TokenStream) -> TokenStream {
                 #filters_struct
 
                 impl #struct_name {
-                    pub fn filtered(filters: &#filter_struct_ident, conn: &PgConnection) -> Result<(Vec<#struct_name>, i64), diesel::result::Error> {
+                    pub fn filtered(filters: &#filter_struct_ident, conn: &mut PgConnection) -> Result<(Vec<#struct_name>, i64), diesel::result::Error> {
                         Self::filter(filters)
                           .paginate(filters.page)
                           .per_page(filters.per_page)
@@ -307,7 +307,7 @@ pub fn filter(input: TokenStream) -> TokenStream {
                 #filters_struct
 
                 impl #struct_name {
-                    pub fn filtered(filters: &#filter_struct_ident, conn: &PgConnection) -> Result<Vec<#struct_name>, diesel::result::Error> {
+                    pub fn filtered(filters: &#filter_struct_ident, conn: &mut PgConnection) -> Result<Vec<#struct_name>, diesel::result::Error> {
                         Self::filter(filters).load::<#struct_name>(conn)
                     }
 
