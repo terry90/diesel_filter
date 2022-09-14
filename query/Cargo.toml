@@ -13,6 +13,7 @@ readme = "../README.md"
 [features]
 rocket = []
 actix = []
+axum = []
 
 [dependencies]
 syn = { version = "1.0.74", features = ["parsing"] }

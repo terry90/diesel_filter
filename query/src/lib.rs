@@ -262,7 +262,7 @@ pub fn filter(input: TokenStream) -> TokenStream {
         }
     };
 
-    #[cfg(feature = "actix")]
+    #[cfg(any(feature = "actix", feature = "axum"))]
     let filters_struct = quote! {
         #[derive(serde::Deserialize, Debug)]
         pub struct #filter_struct_ident {
@@ -270,7 +270,7 @@ pub fn filter(input: TokenStream) -> TokenStream {
         }
     };
 
-    #[cfg(not(any(feature = "rocket", feature = "actix")))]
+    #[cfg(not(any(feature = "rocket", feature = "actix", feature = "axum")))]
     let filters_struct = quote! {
         #[derive(Debug)]
         pub struct #filter_struct_ident {

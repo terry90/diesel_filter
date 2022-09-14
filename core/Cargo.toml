@@ -15,6 +15,7 @@ serialize = ["serde"]
 pagination = ["diesel"]
 rocket = ["diesel_filter_query/rocket"]
 actix = ["diesel_filter_query/actix"]
+axum = ["diesel_filter_query/axum"]
 
 [dependencies]
 diesel_filter_query = { path = "../query", version = ">=0.1.4" }
