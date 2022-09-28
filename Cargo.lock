@@ -25,7 +25,7 @@ dependencies = [
 
 [[package]]
 name = "diesel_filter"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "diesel",
  "diesel_filter_query",
