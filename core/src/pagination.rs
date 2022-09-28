@@ -42,6 +42,7 @@ pub trait Paginate: Sized {
 impl<T> Paginate for T {
     fn paginate(self, page: Option<i64>) -> Paginated<Self> {
         let page = page.unwrap_or(1);
+
         Paginated {
             query: self,
             per_page: DEFAULT_PER_PAGE,
@@ -62,10 +63,11 @@ pub struct Paginated<T> {
 impl<T> Paginated<T> {
     pub fn per_page(self, per_page: Option<i64>) -> Self {
         let per_page = per_page.unwrap_or(DEFAULT_PER_PAGE);
+
         Paginated {
             per_page,
-            offset: (self.page - 1) * self.per_page,
-            ..self
+            offset: (self.page - 1) * per_page,
+            ..self,
         }
     }
 
