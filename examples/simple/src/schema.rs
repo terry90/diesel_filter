@@ -1,8 +1,8 @@
 table! {
     thingies (id) {
-        id -> Integer,
+        id -> Uuid,
         name -> Varchar,
         category -> Varchar,
-        other -> Varchar,
+        other -> Nullable<Varchar>,
     }
 }

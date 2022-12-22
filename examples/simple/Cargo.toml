@@ -1,9 +1,11 @@
 [package]
+edition = "2021"
 name = "simple-example"
-version = "0.1.0"
 publish = false
+version = "0.1.0"
 
 [dependencies]
-diesel_filter = { path = "../../core" }
-serde = { version = "1.0" }
-diesel = { version = "1.4", features = ["postgres"] }
+diesel = {version = "2", features = ["postgres", "uuid"]}
+diesel_filter = {path = "../../core", features = ["pagination"]}
+serde = {version = "1.0"}
+uuid = "1.2.2"
