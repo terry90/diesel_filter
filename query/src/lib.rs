@@ -254,9 +254,14 @@ pub fn filter(input: TokenStream) -> TokenStream {
         });
     }
 
+    #[cfg(feature = "utoipa")]
+    let extra_derive = quote! { utoipa::IntoParams };
+    #[cfg(not(feature = "utoipa"))]
+    let extra_derive = quote! {};
+
     #[cfg(feature = "rocket")]
     let filters_struct = quote! {
-        #[derive(FromForm, Debug)]
+        #[derive(FromForm, Debug, #extra_derive)]
         pub struct #filter_struct_ident {
             #( #fields )*
         }
@@ -264,7 +269,7 @@ pub fn filter(input: TokenStream) -> TokenStream {
 
     #[cfg(any(feature = "actix", feature = "axum"))]
     let filters_struct = quote! {
-        #[derive(serde::Deserialize, Debug)]
+        #[derive(serde::Deserialize, Debug, #extra_derive)]
         pub struct #filter_struct_ident {
             #( #fields )*
         }
@@ -272,7 +277,7 @@ pub fn filter(input: TokenStream) -> TokenStream {
 
     #[cfg(not(any(feature = "rocket", feature = "actix", feature = "axum")))]
     let filters_struct = quote! {
-        #[derive(Debug)]
+        #[derive(Debug, #extra_derive)]
         pub struct #filter_struct_ident {
             #( #fields )*
         }

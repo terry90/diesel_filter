@@ -16,6 +16,7 @@ pagination = ["diesel"]
 rocket = ["diesel_filter_query/rocket"]
 actix = ["diesel_filter_query/actix"]
 axum = ["diesel_filter_query/axum"]
+utoipa = ["diesel_filter_query/utoipa"]
 
 [dependencies]
 diesel_filter_query = { path = "../query", version = ">=1.0.0" }
