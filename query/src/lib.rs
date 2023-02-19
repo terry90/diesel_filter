@@ -16,6 +16,8 @@ struct Filter {
 enum FilterableType {
     String,
     Uuid,
+    I32,
+    I64,
     Foreign(String),
 }
 
@@ -79,6 +81,10 @@ impl From<&TypePath> for FilterableType {
             "Option<String>" => Self::String,
             "Option<Uuid>" => Self::Uuid,
             "Option<uuid::Uuid>" => Self::Uuid,
+            "i32" => Self::I32,
+            "Option<i32>" => Self::I32,
+            "i64" => Self::I64,
+            "Option<i64>" => Self::I64,
             other => Self::Foreign(other.to_string()),
         }
     }
@@ -89,6 +95,8 @@ impl From<FilterableType> for Ident {
         match val {
             FilterableType::String => Ident::new("String", Span::call_site()),
             FilterableType::Uuid => Ident::new("Uuid", Span::call_site()),
+            FilterableType::I32 => Ident::new("i32", Span::call_site()),
+            FilterableType::I64 => Ident::new("i64", Span::call_site()),
             FilterableType::Foreign(ty) => Ident::new(&ty, Span::call_site()),
         }
     }
