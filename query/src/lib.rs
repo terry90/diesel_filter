@@ -16,6 +16,8 @@ struct Filter {
 enum FilterableType {
     String,
     Uuid,
+    I32,
+    I64,
     Foreign(String),
 }
 
@@ -79,6 +81,10 @@ impl From<&TypePath> for FilterableType {
             "Option<String>" => Self::String,
             "Option<Uuid>" => Self::Uuid,
             "Option<uuid::Uuid>" => Self::Uuid,
+            "i32" => Self::I32,
+            "Option<i32>" => Self::I32,
+            "i64" => Self::I64,
+            "Option<i64>" => Self::I64,
             other => Self::Foreign(other.to_string()),
         }
     }
@@ -89,6 +95,8 @@ impl From<FilterableType> for Ident {
         match val {
             FilterableType::String => Ident::new("String", Span::call_site()),
             FilterableType::Uuid => Ident::new("Uuid", Span::call_site()),
+            FilterableType::I32 => Ident::new("i32", Span::call_site()),
+            FilterableType::I64 => Ident::new("i64", Span::call_site()),
             FilterableType::Foreign(ty) => Ident::new(&ty, Span::call_site()),
         }
     }
@@ -254,9 +262,14 @@ pub fn filter(input: TokenStream) -> TokenStream {
         });
     }
 
+    #[cfg(feature = "utoipa")]
+    let extra_derive = quote! { utoipa::IntoParams };
+    #[cfg(not(feature = "utoipa"))]
+    let extra_derive = quote! {};
+
     #[cfg(feature = "rocket")]
     let filters_struct = quote! {
-        #[derive(FromForm, Debug)]
+        #[derive(FromForm, Debug, #extra_derive)]
         pub struct #filter_struct_ident {
             #( #fields )*
         }
@@ -264,7 +277,7 @@ pub fn filter(input: TokenStream) -> TokenStream {
 
     #[cfg(any(feature = "actix", feature = "axum"))]
     let filters_struct = quote! {
-        #[derive(serde::Deserialize, Debug)]
+        #[derive(serde::Deserialize, Debug, #extra_derive)]
         pub struct #filter_struct_ident {
             #( #fields )*
         }
@@ -272,7 +285,7 @@ pub fn filter(input: TokenStream) -> TokenStream {
 
     #[cfg(not(any(feature = "rocket", feature = "actix", feature = "axum")))]
     let filters_struct = quote! {
-        #[derive(Debug)]
+        #[derive(Debug, #extra_derive)]
         pub struct #filter_struct_ident {
             #( #fields )*
         }

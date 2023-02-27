@@ -18,11 +18,11 @@ diesel_filter = { path = "../../diesel_filter/core", features = ["pagination", "
 ```
 
 Derive your struct with `DieselFilter` and annotate the fields that will be used as filters.
-The top level annotation `#[table_name = "db_table"]` is mandatory.
+The top level annotation `#[diesel(table_name = db_table)]` is mandatory.
 
 ```rust
 #[derive(Queryable, DieselFilter)]
-#[table_name = "projects"]
+#[diesel(table_name = projects)]
 pub struct Project {
     pub id: Uuid,
     #[filter(substring, insensitive)]
@@ -117,7 +117,7 @@ These are independent of the `#[pagination]` annotation that you can add on your
 
 ```rust
 #[derive(Queryable, DieselFilter)]
-#[table_name = "projects"]
+#[diesel(table_name = projects)]
 #[pagination]
 pub struct Project
 ```

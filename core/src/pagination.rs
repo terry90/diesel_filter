@@ -67,7 +67,7 @@ impl<T> Paginated<T> {
         Paginated {
             per_page,
             offset: (self.page - 1) * per_page,
-            ..self,
+            ..self
         }
     }
 
