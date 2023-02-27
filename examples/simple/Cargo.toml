@@ -5,7 +5,7 @@ publish = false
 version = "0.1.0"
 
 [dependencies]
-diesel = {version = "2", features = ["postgres", "uuid"]}
-diesel_filter = {path = "../../core", features = ["pagination"]}
-serde = {version = "1.0"}
+diesel = { version = "2", features = ["postgres", "uuid"] }
+diesel_filter = { path = "../../core", features = ["pagination"] }
+serde = { version = "1.0" }
 uuid = "1.2.2"
