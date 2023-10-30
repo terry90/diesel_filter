@@ -4,21 +4,13 @@ use quote::{quote, ToTokens};
 use std::default::Default;
 use syn::{
     parse::{Parse, ParseStream},
-    parse_macro_input, Data, DeriveInput, Fields, Meta, NestedMeta, Path, Token, Type, TypePath,
+    parse_macro_input, Data, DeriveInput, Fields, Meta, NestedMeta, Path, Token, Type,
 };
 
 struct Filter {
     pub name: Ident,
-    pub ty: FilterableType,
+    pub ty: Type,
     pub opts: FilterOpts,
-}
-
-enum FilterableType {
-    String,
-    Uuid,
-    I32,
-    I64,
-    Foreign(String),
 }
 
 enum FilterKind {
@@ -72,34 +64,39 @@ impl From<Vec<NestedMeta>> for FilterOpts {
     }
 }
 
-impl From<&TypePath> for FilterableType {
-    fn from(ty: &TypePath) -> Self {
-        match ty.to_token_stream().to_string().replace(' ', "").as_str() {
-            "String" => Self::String,
-            "Uuid" => Self::Uuid,
-            "uuid::Uuid" => Self::Uuid,
-            "Option<String>" => Self::String,
-            "Option<Uuid>" => Self::Uuid,
-            "Option<uuid::Uuid>" => Self::Uuid,
-            "i32" => Self::I32,
-            "Option<i32>" => Self::I32,
-            "i64" => Self::I64,
-            "Option<i64>" => Self::I64,
-            other => Self::Foreign(other.to_string()),
-        }
+// https://stackoverflow.com/a/77040924/746914
+fn option_type(ty: &Type) -> Option<&Type> {
+    let Type::Path(ty) = ty else { return None };
+    if ty.qself.is_some() {
+        return None;
     }
-}
 
-impl From<FilterableType> for Ident {
-    fn from(val: FilterableType) -> Self {
-        match val {
-            FilterableType::String => Ident::new("String", Span::call_site()),
-            FilterableType::Uuid => Ident::new("Uuid", Span::call_site()),
-            FilterableType::I32 => Ident::new("i32", Span::call_site()),
-            FilterableType::I64 => Ident::new("i64", Span::call_site()),
-            FilterableType::Foreign(ty) => Ident::new(&ty, Span::call_site()),
-        }
+    let ty = &ty.path;
+
+    if ty.segments.is_empty() || ty.segments.last().unwrap().ident != "Option" {
+        return None;
     }
+
+    if !(ty.segments.len() == 1
+        || (ty.segments.len() == 3
+            && ["core", "std"].contains(&ty.segments[0].ident.to_string().as_str())
+            && ty.segments[1].ident == "option"))
+    {
+        return None;
+    }
+
+    let last_segment = ty.segments.last().unwrap();
+    let syn::PathArguments::AngleBracketed(generics) = &last_segment.arguments else {
+        return None;
+    };
+    if generics.args.len() != 1 {
+        return None;
+    }
+    let syn::GenericArgument::Type(inner_type) = &generics.args[0] else {
+        return None;
+    };
+
+    Some(inner_type)
 }
 
 struct TableName {
@@ -148,7 +145,7 @@ pub fn filter(input: TokenStream) -> TokenStream {
             for field in fields.named {
                 match field.ident {
                     Some(name) => {
-                        let field_type = field.ty;
+                        let ty = field.ty;
                         for attr in field.attrs.into_iter() {
                             if !attr.path.is_ident("filter") {
                                 continue;
@@ -161,14 +158,9 @@ pub fn filter(input: TokenStream) -> TokenStream {
                                 _ => continue,
                             };
 
-                            if let Type::Path(ty) = &field_type {
-                                let ty = FilterableType::from(ty);
-                                let name = name.clone();
-
-                                filters.push(Filter { name, ty, opts });
-                                continue;
-                            }
-                            panic!("this type is not supported");
+                            let ty = option_type(&ty).unwrap_or(&ty).to_owned();
+                            let name = name.clone();
+                            filters.push(Filter { name, ty, opts });
                         }
                     }
                     None => continue,
@@ -189,7 +181,15 @@ pub fn filter(input: TokenStream) -> TokenStream {
     let mut has_multiple = false;
     for filter in filters {
         let field = filter.name;
-        let ty: Ident = filter.ty.into();
+        let ty: Ident = Ident::new(
+            filter
+                .ty
+                .to_token_stream()
+                .to_string()
+                .replace(' ', "")
+                .as_str(),
+            Span::call_site(),
+        );
         let opts = filter.opts;
 
         let q = if opts.multiple {
