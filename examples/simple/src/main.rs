@@ -12,12 +12,15 @@ use uuid::Uuid;
 
 mod schema;
 
-#[derive(Debug, DieselNewType)]
+#[derive(Debug, Clone, DieselNewType)]
 pub struct CustomType(String);
 
 #[derive(DieselFilter, Queryable, Debug)]
 #[diesel(table_name = thingies)]
 #[pagination]
+// Test `filters_struct_attr` with multiple attributes
+#[filters_struct_attr(derive(Default))]
+#[filters_struct_attr(derive(Clone))]
 pub struct Thingy {
     pub id: Uuid,
     #[filter(insensitive)]
@@ -51,13 +54,13 @@ fn main() {
         option_num32: Some(1),
         num64: Some(1),
         option_num64: Some(1),
-        text: None,
-        option_text: None,
         custom: Some(CustomType("".into())),
         option_custom: Some(CustomType("".into())),
-        page: None,
-        per_page: None,
+        ..Default::default()
     };
+
+    // Verify that `#[filters_struct_attr(derive(Clone))]` is applied
+    let _ = filters.clone();
 
     let results = Thingy::filtered(&filters, &mut conn);
 
