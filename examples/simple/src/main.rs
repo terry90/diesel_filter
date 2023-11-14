@@ -47,7 +47,7 @@ fn main() {
     // Get a postgres DB connection
     let database_url = env::var("DATABASE_URL").expect("Please set DATABASE_URL");
     let mut conn = PgConnection::establish(&database_url).expect("Could not connect to database");
-    
+
     let filters = ThingyFilters {
         name: Some("coucou".to_owned()),
         num32: Some(1),
