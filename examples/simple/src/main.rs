@@ -21,7 +21,6 @@ pub struct CustomType(String);
 // Test `filters_struct_attr` with multiple attributes
 #[filters_struct_attr(derive(Default))]
 #[filters_struct_attr(derive(Clone))]
-//#[filters_struct_attr]
 pub struct Thingy {
     pub id: Uuid,
     #[filter(insensitive)]
