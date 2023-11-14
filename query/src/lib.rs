@@ -115,7 +115,7 @@ impl Parse for TableName {
     }
 }
 
-#[proc_macro_derive(DieselFilter, attributes(filter, table_name, pagination))]
+#[proc_macro_derive(DieselFilter, attributes(filter, table_name, pagination, filters_struct_attr))]
 pub fn filter(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
@@ -170,6 +170,17 @@ pub fn filter(input: TokenStream) -> TokenStream {
     }
 
     let filter_struct_ident = Ident::new(&format!("{}Filters", struct_name), struct_name.span());
+
+    let filters_struct_attrs = input
+        .attrs
+        .iter()
+        .filter(|attr| attr.path.is_ident("filters_struct_attr"))
+        .map(|attr| {
+            let tokens_without_parenthesis = attr
+                .parse_args::<proc_macro2::TokenStream>()
+                .expect("failed to parse #[filters_struct_attr(...)]");
+            quote! { #[#tokens_without_parenthesis] }
+        });
 
     if filters.is_empty() {
         panic!("please annotate at least one field to filter with #[filter] on your struct");
@@ -294,6 +305,7 @@ pub fn filter(input: TokenStream) -> TokenStream {
     let expanded = match pagination {
         true => {
             quote! {
+                #( #filters_struct_attrs )*
                 #filters_struct
 
                 impl #struct_name {
