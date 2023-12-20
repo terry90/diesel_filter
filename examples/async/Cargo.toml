@@ -1,0 +1,14 @@
+[package]
+edition = "2021"
+name = "async-example"
+publish = false
+version = "0.1.0"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+diesel = { version = "2", features = ["uuid"] }
+diesel-async = { version = "0.4.1", features = ["postgres"] }
+diesel-derive-newtype = "2.1.0"
+diesel_filter = { path = "../../core", features = ["pagination", "diesel_async"] }
+serde = { version = "1.0" }
+uuid = "1.2.2"
