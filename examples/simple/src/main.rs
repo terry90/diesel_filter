@@ -7,13 +7,22 @@ use crate::schema::thingies;
 use diesel::prelude::*;
 use diesel_derive_newtype::DieselNewType;
 use diesel_filter::Paginate;
-use std::env;
+use serde::Deserialize;
+use std::{convert::Infallible, env, str::FromStr};
 use uuid::Uuid;
 
 mod schema;
 
-#[derive(Debug, DieselNewType)]
+#[derive(Debug, Deserialize, DieselNewType)]
 pub struct CustomType(String);
+
+impl FromStr for CustomType {
+    type Err = Infallible;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(Self(s.to_owned()))
+    }
+}
 
 #[derive(DieselFilter, Queryable, Debug)]
 #[diesel(table_name = thingies)]
@@ -38,6 +47,8 @@ pub struct Thingy {
     pub custom: CustomType,
     #[filter]
     pub option_custom: Option<CustomType>,
+    #[filter(multiple)]
+    pub multiple_custom: CustomType,
 }
 
 fn main() {
@@ -55,6 +66,7 @@ fn main() {
         option_text: None,
         custom: Some(CustomType("".into())),
         option_custom: Some(CustomType("".into())),
+        multiple_custom: Some(vec![CustomType("a".into()), CustomType("b".into())]),
         page: None,
         per_page: None,
     };

@@ -199,7 +199,15 @@ pub fn filter(input: TokenStream) -> TokenStream {
                 #[field(default = Option::None)]
                 pub #field: Option<Vec<#ty>>,
             });
-            #[cfg(not(feature = "rocket"))]
+            #[cfg(any(feature = "actix", feature = "axum"))]
+            {
+                let serde_as_path = format!("Option<::diesel_filter::serde_with::StringWithSeparator::<::diesel_filter::serde_with::formats::CommaSeparator, {}>>", ty);
+                fields.push(quote! {
+                    #[serde_as(as = #serde_as_path)]
+                    pub #field: Option<Vec<#ty>>,
+                });
+            }
+            #[cfg(not(any(feature = "rocket", feature = "actix", feature = "axum")))]
             fields.push(quote! {
                 pub #field: Option<Vec<#ty>>,
             });
@@ -277,6 +285,7 @@ pub fn filter(input: TokenStream) -> TokenStream {
 
     #[cfg(any(feature = "actix", feature = "axum"))]
     let filters_struct = quote! {
+        #[::diesel_filter::serde_with::serde_as(crate = "::diesel_filter::serde_with")]
         #[derive(serde::Deserialize, Debug, #extra_derive)]
         pub struct #filter_struct_ident {
             #( #fields )*

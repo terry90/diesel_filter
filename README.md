@@ -142,6 +142,44 @@ async fn index(filters: ProjectFilters, conn: DbConn) -> Result<Json<PaginatedPa
 }
 ```
 
+### `#[filter(multiple)]`
+
+When using `#[filter(multiple)]` with `actix` or `axum` features, parsing of multiple options is done with [`StringWithSeparator<CommaSeparator, T>`](https://docs.rs/serde_with/latest/serde_with/struct.StringWithSeparator.html).
+
+This requires the underlying type to `impl FromStr`, for example:
+
+```rust
+#[derive(Debug, DieselNewType)]
+pub struct CustomType(String);
+
+impl FromStr for CustomType {
+    type Err = Infallible;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(Self(s.to_owned()))
+    }
+}
+```
+
+Enums can use [`EnumString`](https://docs.rs/strum/latest/strum/derive.EnumString.html):
+
+```rust
+use strum::EnumString;
+
+#[derive(EnumString, DieselNewType)]
+pub enum CustomType {
+    A,
+    B,
+    C,
+}
+
+#[derive(DieselFilter)]
+struct Model {
+    #[filter(multiple)]
+    custom: CustomType,
+}
+```
+
 ## License
 
 Diesel filter is licensed under either of the following, at your option:
