@@ -194,23 +194,27 @@ pub fn filter(input: TokenStream) -> TokenStream {
 
         let q = if opts.multiple {
             has_multiple = true;
+
+            #[allow(unused_mut)]
+            let mut field_attributes: Vec<proc_macro2::TokenStream> = vec![];
+
+            #[cfg(feature = "utoipa")]
+            field_attributes.push(quote! { #[param(value_type = String)] });
+
             #[cfg(feature = "rocket")]
-            fields.push(quote! {
-                #[field(default = Option::None)]
-                pub #field: Option<Vec<#ty>>,
-            });
+            field_attributes.push(quote! { #[field(default = Option::None)] });
+
             #[cfg(any(feature = "actix", feature = "axum"))]
             {
                 let serde_as_path = format!("Option<::diesel_filter::serde_with::StringWithSeparator::<::diesel_filter::serde_with::formats::CommaSeparator, {}>>", ty);
-                fields.push(quote! {
-                    #[serde_as(as = #serde_as_path)]
-                    pub #field: Option<Vec<#ty>>,
-                });
+                field_attributes.push(quote! { #[serde_as(as = #serde_as_path)] });
             }
-            #[cfg(not(any(feature = "rocket", feature = "actix", feature = "axum")))]
+
             fields.push(quote! {
+                #( #field_attributes )*
                 pub #field: Option<Vec<#ty>>,
             });
+
             match opts.kind {
                 FilterKind::Basic => {
                     quote! { #table_name::#field.eq(any(filter)) }
