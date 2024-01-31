@@ -194,15 +194,27 @@ pub fn filter(input: TokenStream) -> TokenStream {
 
         let q = if opts.multiple {
             has_multiple = true;
+
+            #[allow(unused_mut)]
+            let mut field_attributes: Vec<proc_macro2::TokenStream> = vec![];
+
+            #[cfg(feature = "utoipa")]
+            field_attributes.push(quote! { #[param(value_type = String)] });
+
             #[cfg(feature = "rocket")]
+            field_attributes.push(quote! { #[field(default = Option::None)] });
+
+            #[cfg(any(feature = "actix", feature = "axum"))]
+            {
+                let serde_as_path = format!("Option<::diesel_filter::serde_with::StringWithSeparator::<::diesel_filter::serde_with::formats::CommaSeparator, {}>>", ty);
+                field_attributes.push(quote! { #[serde_as(as = #serde_as_path)] });
+            }
+
             fields.push(quote! {
-                #[field(default = Option::None)]
+                #( #field_attributes )*
                 pub #field: Option<Vec<#ty>>,
             });
-            #[cfg(not(feature = "rocket"))]
-            fields.push(quote! {
-                pub #field: Option<Vec<#ty>>,
-            });
+
             match opts.kind {
                 FilterKind::Basic => {
                     quote! { #table_name::#field.eq(any(filter)) }
@@ -277,6 +289,7 @@ pub fn filter(input: TokenStream) -> TokenStream {
 
     #[cfg(any(feature = "actix", feature = "axum"))]
     let filters_struct = quote! {
+        #[::diesel_filter::serde_with::serde_as(crate = "::diesel_filter::serde_with")]
         #[derive(serde::Deserialize, Debug, #extra_derive)]
         pub struct #filter_struct_ident {
             #( #fields )*
