@@ -258,7 +258,7 @@ pub fn filter(input: TokenStream) -> TokenStream {
         };
 
         queries.push(quote! {
-            if let Some(ref filter) = filters.#field {
+            if let Some(filter) = filters.#field {
                 query = query.filter(#q);
             }
         });
@@ -304,20 +304,41 @@ pub fn filter(input: TokenStream) -> TokenStream {
         }
     };
 
+    #[cfg(not(feature = "diesel_async"))]
+    let conn = quote! { PgConnection };
+
+    #[cfg(feature = "diesel_async")]
+    let conn = quote! { AsyncPgConnection };
+
+    #[cfg(not(feature = "diesel_async"))]
+    let fn_filtered = quote! {
+        pub fn filtered(filters: #filter_struct_ident, conn: &mut #conn) -> Result<(Vec<#struct_name>, i64), diesel::result::Error> {
+            Self::filter(filters)
+              .paginate(filters.page)
+              .per_page(filters.per_page)
+              .load_and_count::<#struct_name>(conn)
+        }
+    };
+
+    #[cfg(feature = "diesel_async")]
+    let fn_filtered = quote! {
+        pub async fn filtered(filters: #filter_struct_ident, conn: &mut #conn) -> Result<(Vec<#struct_name>, i64), diesel::result::Error> {
+            Self::filter(filters)
+              .paginate(filters.page)
+              .per_page(filters.per_page)
+              .load_and_count::<#struct_name>(conn).await
+        }
+    };
+
     let expanded = match pagination {
         true => {
             quote! {
                 #filters_struct
 
                 impl #struct_name {
-                    pub fn filtered(filters: &#filter_struct_ident, conn: &mut PgConnection) -> Result<(Vec<#struct_name>, i64), diesel::result::Error> {
-                        Self::filter(filters)
-                          .paginate(filters.page)
-                          .per_page(filters.per_page)
-                          .load_and_count::<#struct_name>(conn)
-                    }
+                    #fn_filtered
 
-                    pub fn filter<'a>(filters: &'a #filter_struct_ident) -> crate::schema::#table_name::BoxedQuery<'a, diesel::pg::Pg> {
+                    pub fn filter<'a>(filters: #filter_struct_ident) -> crate::schema::#table_name::BoxedQuery<'a, diesel::pg::Pg> {
                         #( #uses )*
                         let mut query = crate::schema::#table_name::table.into_boxed();
 
@@ -333,11 +354,11 @@ pub fn filter(input: TokenStream) -> TokenStream {
                 #filters_struct
 
                 impl #struct_name {
-                    pub fn filtered(filters: &#filter_struct_ident, conn: &mut PgConnection) -> Result<Vec<#struct_name>, diesel::result::Error> {
-                        Self::filter(filters).load::<#struct_name>(conn)
+                    pub async fn filtered(filters: #filter_struct_ident, conn: &mut #conn) -> Result<Vec<#struct_name>, diesel::result::Error> {
+                        Self::filter(filters).load::<#struct_name>(conn).await
                     }
 
-                    pub fn filter<'a>(filters: &'a #filter_struct_ident) -> crate::schema::#table_name::BoxedQuery<'a, diesel::pg::Pg> {
+                    pub fn filter<'a>(filters: #filter_struct_ident) -> crate::schema::#table_name::BoxedQuery<'a, diesel::pg::Pg> {
                         #( #uses )*
                         let mut query = crate::schema::#table_name::table.into_boxed();
 
