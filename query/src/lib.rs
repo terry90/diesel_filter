@@ -338,9 +338,9 @@ pub fn filter(input: TokenStream) -> TokenStream {
                 impl #struct_name {
                     #fn_filtered
 
-                    pub fn filter<'a>(filters: #filter_struct_ident) -> crate::schema::#table_name::BoxedQuery<'a, diesel::pg::Pg> {
+                    pub fn filter<'a>(filters: #filter_struct_ident) -> #table_name::BoxedQuery<'a, diesel::pg::Pg> {
                         #( #uses )*
-                        let mut query = crate::schema::#table_name::table.into_boxed();
+                        let mut query = #table_name::table.into_boxed();
 
                         #( #queries )*
 
@@ -358,9 +358,9 @@ pub fn filter(input: TokenStream) -> TokenStream {
                         Self::filter(filters).load::<#struct_name>(conn).await
                     }
 
-                    pub fn filter<'a>(filters: #filter_struct_ident) -> crate::schema::#table_name::BoxedQuery<'a, diesel::pg::Pg> {
+                    pub fn filter<'a>(filters: #filter_struct_ident) -> #table_name::BoxedQuery<'a, diesel::pg::Pg> {
                         #( #uses )*
-                        let mut query = crate::schema::#table_name::table.into_boxed();
+                        let mut query = #table_name::table.into_boxed();
 
                         #( #queries )*
 
