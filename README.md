@@ -13,6 +13,7 @@ Works with `Diesel` and `Postgres`.
 ## Usage & Examples
 
 Cargo.toml
+
 ```toml
 diesel_filter = { path = "../../diesel_filter/core", features = ["pagination", "serialize", "rocket"] }
 ```
@@ -45,12 +46,6 @@ Two methods will be generated (let's keep `Project` as an example):
 pub fn filter<'a>(filters: &'a ProjectFilters) -> BoxedQuery<'a, Pg>
 ```
 
-and
-
-```rust
-pub fn filtered(filters: &ProjectFilters, conn: &PgConnection) -> Result<Vec<Project>, Error>
-```
-
 The `filter` method can be used in conjunction with other diesel methods like `inner_join` and such.
 
 ```rust
@@ -64,39 +59,11 @@ Project::filter(&filters)
 
 With the `rocket` feature, the generated struct can be obtained from the request query parameters (dot notation `?filters.name=xxx`)
 
-```rust
-use diesel_filter::PaginatedPayload;
-
-#[get("/?<filters>")]
-async fn index(filters: ClientFilters, conn: DbConn) -> Result<Json<PaginatedPayload<Client>>, Error> {
-    Ok(Json(
-        conn.run(move |conn| Client::filtered(&filters, conn))
-            .await?
-            .into(),
-    ))
-}
-
-```
-
 ### With Actix
 
 With the `actix` feature, the generated struct can be obtained from the request query parameters
 
 N.B: unlike the `rocket` integration, the query parameters must be sent unscopped. e.g `?field=xxx&other=1`
-
-```rust
-use diesel_filter::PaginatedPayload;
-
-#[get("/")]
-async fn index(filters: web::Query(ClientFilters), conn: DbConn) -> Result<Json<PaginatedPayload<Client>>, Error> {
-    Ok(Json(
-        conn.run(move |conn| Client::filtered(&filters, conn))
-            .await?
-            .into(),
-    ))
-}
-
-```
 
 ### With Pagination
 
@@ -113,33 +80,13 @@ Project::filter(&filters)
     .load_and_count::<ProjectResponse>(conn)
 ```
 
-These are independent of the `#[pagination]` annotation that you can add on your struct to add `page` and `per_page` to your generated filter struct and change the signature of the `filtered` method.
+These are independent of the `#[pagination]` annotation that you can add on your struct to add `page` and `per_page` to your generated filter struct.
 
 ```rust
 #[derive(Queryable, DieselFilter)]
 #[diesel(table_name = projects)]
 #[pagination]
 pub struct Project
-```
-
-To convert this into Json, with the feature flag `serialize` you can use `PaginatedPayload`.
-
-```rust
-pub struct PaginatedPayload<T> {
-    data: Vec<T>,
-    total: i64,
-}
-```
-
-```rust
-#[get("/?<filters>")]
-async fn index(filters: ProjectFilters, conn: DbConn) -> Result<Json<PaginatedPayload<Project>>, Error> {
-    Ok(Json(
-        conn.run(move |conn| Project::filtered(&filters))
-        .await
-        .into(),
-    ))
-}
 ```
 
 ### `#[filter(multiple)]`

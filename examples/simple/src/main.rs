@@ -71,7 +71,7 @@ fn main() {
         per_page: None,
     };
 
-    let results = Thingy::filtered(&filters, &mut conn);
+    let results = Thingy::filter(filters).get_results(&mut conn).await?;
 
     println!("{:?}", filters);
     println!("{:?}", results);
