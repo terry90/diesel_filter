@@ -1,21 +1,24 @@
-# Diesel Filter
+# `diesel-filter`
 
 Diesel filter is a quick way to add filters and pagination to your diesel models.
-Works with `Diesel` and `Postgres`.
+Works with `diesel` and `Postgres`.
 
 ## Crate features
 
 - `rocket` Derives `FromForm` on the generated filter struct ([See this example](#with-rocket))
 - `actix` Derives `Deserialize` on the generated filter struct ([See this example](#with-actix))
-- `pagination` Adds the `Paginate` trait ([See this example](#with-pagination))
 - `serialize` with `pagination` Adds the `PaginatedPayload` trait that can directly be sent to your client
+
+## Changes in 2.0
+
+* Pagination was moved to a new crate called `diesel-pagination`, see new usage below.
 
 ## Usage & Examples
 
 Cargo.toml
 
 ```toml
-diesel_filter = { path = "../../diesel_filter/core", features = ["pagination", "serialize", "rocket"] }
+diesel-filter = { path = "../../diesel_filter/diesel-filter", features = ["serialize", "rocket"] }
 ```
 
 Derive your struct with `DieselFilter` and annotate the fields that will be used as filters.
@@ -65,27 +68,25 @@ With the `actix` feature, the generated struct can be obtained from the request 
 
 N.B: unlike the `rocket` integration, the query parameters must be sent unscopped. e.g `?field=xxx&other=1`
 
-### With Pagination
+### Pagination
 
-With the `pagination` feature, you have access to the methods `paginate`, `per_page` and `load_and_count`
+The `diesel-pagination` crate exports a trait with `paginate` and `load_and_count` methods.
 
 ```rust
-use diesel_filter::Paginate;
+use diesel_pagination::Paginate;
 
 Project::filter(&filters)
     .inner_join(clients::table)
     .select((projects::id, clients::name))
-    .paginate(filters.page)
-    .per_page(filters.per_page)
+    .paginate(PaginationParams { page: Some(1), per_page: Some(10) })
     .load_and_count::<ProjectResponse>(conn)
 ```
 
-These are independent of the `#[pagination]` annotation that you can add on your struct to add `page` and `per_page` to your generated filter struct.
+`PaginationParams` can be used as an additional query parameters struct to the generated `[YourStruct]Filter` in `actix`/`axum`/`rocket`.
 
 ```rust
 #[derive(Queryable, DieselFilter)]
 #[diesel(table_name = projects)]
-#[pagination]
 pub struct Project
 ```
 

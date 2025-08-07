@@ -1,0 +1,16 @@
+[package]
+name = "diesel-filter-example-sync"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+anyhow = "1.0.98"
+diesel = { version = "2", features = ["postgres", "uuid"] }
+diesel-filter = { path = "../../diesel-filter" }
+diesel-filter-test-db = { path = "../db" }
+serde = { version = "1.0", features = ["derive"] }
+tokio = { version = "1.47.1", features = ["macros", "rt-multi-thread"] }
+tracing = "0.1.41"
+tracing-subscriber = "0.3.19"
+uuid = { version = "1.17.0", features = ["serde"] }

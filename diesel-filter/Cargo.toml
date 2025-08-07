@@ -1,0 +1,23 @@
+[package]
+name = "diesel-filter"
+version = "2.0.0"
+authors = ["Terry Raimondo <terry.raimondo@gmail.com>"]
+edition = "2024"
+license = "MIT OR Apache-2.0"
+keywords = ["diesel", "pagination", "filter", "json", "rocket"]
+description = "Diesel filter is a quick way to add filters and pagination to your diesel models"
+homepage = "https://github.com/terry90/diesel_filter"
+repository = "https://github.com/terry90/diesel_filter"
+readme = "../README.md"
+
+[features]
+serde = ["dep:serde"]
+rocket = ["diesel-filter-query/rocket"]
+actix = ["diesel-filter-query/actix", "dep:serde_with"]
+axum = ["diesel-filter-query/axum", "dep:serde_with"]
+utoipa = ["diesel-filter-query/utoipa"]
+
+[dependencies]
+diesel-filter-query = { path = "../diesel-filter-query", version = "2.0.0" }
+serde = { version = "1.0", optional = true }
+serde_with = { version = "3.14.0", optional = true }

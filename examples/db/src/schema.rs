@@ -1,4 +1,4 @@
-table! {
+diesel::table! {
     thingies (id) {
         id -> Uuid,
         name -> Varchar,
