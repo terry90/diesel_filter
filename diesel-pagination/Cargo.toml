@@ -1,0 +1,16 @@
+[package]
+name = "diesel-pagination"
+version = "2.0.0"
+edition = "2024"
+
+[features]
+default = []
+diesel-async = ["dep:diesel-async"]
+serde = ["dep:serde"]
+utoipa = ["dep:utoipa"]
+
+[dependencies]
+diesel = "2.2.12"
+diesel-async = { version = "0.6.1", optional = true }
+serde = { version = "1.0", optional = true }
+utoipa = { version = "5.4.0", optional = true }

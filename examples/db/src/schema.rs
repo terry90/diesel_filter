@@ -1,4 +1,4 @@
-table! {
+diesel::table! {
     thingies (id) {
         id -> Uuid,
         name -> Varchar,
@@ -10,5 +10,6 @@ table! {
         option_text -> Nullable<Varchar>,
         custom -> Varchar,
         option_custom -> Nullable<Varchar>,
+        multiple_custom -> Varchar,
     }
 }

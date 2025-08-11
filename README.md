@@ -1,20 +1,24 @@
-# Diesel Filter
+# `diesel-filter`
 
 Diesel filter is a quick way to add filters and pagination to your diesel models.
-Works with `Diesel` and `Postgres`.
+Works with `diesel` and `Postgres`.
 
 ## Crate features
 
 - `rocket` Derives `FromForm` on the generated filter struct ([See this example](#with-rocket))
 - `actix` Derives `Deserialize` on the generated filter struct ([See this example](#with-actix))
-- `pagination` Adds the `Paginate` trait ([See this example](#with-pagination))
 - `serialize` with `pagination` Adds the `PaginatedPayload` trait that can directly be sent to your client
+
+## Changes in 2.0
+
+* Pagination was moved to a new crate called `diesel-pagination`, see new usage below.
 
 ## Usage & Examples
 
 Cargo.toml
+
 ```toml
-diesel_filter = { path = "../../diesel_filter/core", features = ["pagination", "serialize", "rocket"] }
+diesel-filter = { path = "../../diesel_filter/diesel-filter", features = ["serialize", "rocket"] }
 ```
 
 Derive your struct with `DieselFilter` and annotate the fields that will be used as filters.
@@ -45,12 +49,6 @@ Two methods will be generated (let's keep `Project` as an example):
 pub fn filter<'a>(filters: &'a ProjectFilters) -> BoxedQuery<'a, Pg>
 ```
 
-and
-
-```rust
-pub fn filtered(filters: &ProjectFilters, conn: &PgConnection) -> Result<Vec<Project>, Error>
-```
-
 The `filter` method can be used in conjunction with other diesel methods like `inner_join` and such.
 
 ```rust
@@ -64,81 +62,69 @@ Project::filter(&filters)
 
 With the `rocket` feature, the generated struct can be obtained from the request query parameters (dot notation `?filters.name=xxx`)
 
-```rust
-use diesel_filter::PaginatedPayload;
-
-#[get("/?<filters>")]
-async fn index(filters: ClientFilters, conn: DbConn) -> Result<Json<PaginatedPayload<Client>>, Error> {
-    Ok(Json(
-        conn.run(move |conn| Client::filtered(&filters, conn))
-            .await?
-            .into(),
-    ))
-}
-
-```
-
 ### With Actix
 
 With the `actix` feature, the generated struct can be obtained from the request query parameters
 
 N.B: unlike the `rocket` integration, the query parameters must be sent unscopped. e.g `?field=xxx&other=1`
 
-```rust
-use diesel_filter::PaginatedPayload;
+### Pagination
 
-#[get("/")]
-async fn index(filters: web::Query(ClientFilters), conn: DbConn) -> Result<Json<PaginatedPayload<Client>>, Error> {
-    Ok(Json(
-        conn.run(move |conn| Client::filtered(&filters, conn))
-            .await?
-            .into(),
-    ))
-}
-
-```
-
-### With Pagination
-
-With the `pagination` feature, you have access to the methods `paginate`, `per_page` and `load_and_count`
+The `diesel-pagination` crate exports a trait with `paginate` and `load_and_count` methods.
 
 ```rust
-use diesel_filter::Paginate;
+use diesel_pagination::Paginate;
 
 Project::filter(&filters)
     .inner_join(clients::table)
     .select((projects::id, clients::name))
-    .paginate(filters.page)
-    .per_page(filters.per_page)
+    .paginate(PaginationParams { page: Some(1), per_page: Some(10) })
     .load_and_count::<ProjectResponse>(conn)
 ```
 
-These are independent of the `#[pagination]` annotation that you can add on your struct to add `page` and `per_page` to your generated filter struct and change the signature of the `filtered` method.
+`PaginationParams` can be used as an additional query parameters struct to the generated `[YourStruct]Filter` in `actix`/`axum`/`rocket`.
 
 ```rust
 #[derive(Queryable, DieselFilter)]
 #[diesel(table_name = projects)]
-#[pagination]
 pub struct Project
 ```
 
-To convert this into Json, with the feature flag `serialize` you can use `PaginatedPayload`.
+### `#[filter(multiple)]`
+
+When using `#[filter(multiple)]` with `actix` or `axum` features, parsing of multiple options is done with [`StringWithSeparator<CommaSeparator, T>`](https://docs.rs/serde_with/latest/serde_with/struct.StringWithSeparator.html).
+
+This requires the underlying type to `impl FromStr`, for example:
 
 ```rust
-pub struct PaginatedPayload<T> {
-    data: Vec<T>,
-    total: i64,
+#[derive(Debug, DieselNewType)]
+pub struct CustomType(String);
+
+impl FromStr for CustomType {
+    type Err = Infallible;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(Self(s.to_owned()))
+    }
 }
 ```
 
+Enums can use [`EnumString`](https://docs.rs/strum/latest/strum/derive.EnumString.html):
+
 ```rust
-#[get("/?<filters>")]
-async fn index(filters: ProjectFilters, conn: DbConn) -> Result<Json<PaginatedPayload<Project>>, Error> {
-    Ok(Json(
-        conn.run(move |conn| Project::filtered(&filters))
-        .await
-        .into(),
-    ))
+use strum::EnumString;
+
+#[derive(EnumString, DieselNewType)]
+pub enum CustomType {
+    A,
+    B,
+    C,
+}
+
+#[derive(DieselFilter)]
+struct Model {
+    #[filter(multiple)]
+    custom: CustomType,
 }
 ```
 

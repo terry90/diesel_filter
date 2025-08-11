@@ -1,8 +1,8 @@
 [package]
-name = "diesel_filter_query"
-version = "1.0.1"
+name = "diesel-filter-query"
+version = "2.0.0"
 authors = ["Terry Raimondo <terry.raimondo@gmail.com>"]
-edition = "2018"
+edition = "2024"
 license = "MIT OR Apache-2.0"
 keywords = ["diesel", "pagination", "filter", "json", "rocket"]
 description = "Procedural macros for Diesel filter"
@@ -17,9 +17,10 @@ axum = []
 utoipa = []
 
 [dependencies]
-syn = { version = "1.0.74", features = ["parsing"] }
-quote = "1.0.9"
-proc-macro2 = "1.0.28"
+syn = "2.0.104"
+quote = "1.0.40"
+proc-macro2 = "1.0.95"
+darling = "0.21.1"
 
 [lib]
 proc-macro = true
