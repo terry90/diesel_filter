@@ -69,7 +69,7 @@ impl<T> Paginate for T {
         PaginatedQuery {
             query: self,
             per_page,
-            page: page,
+            page,
             offset: (page - 1) * per_page,
         }
     }
@@ -92,11 +92,11 @@ impl<T> PaginatedQuery<T> {
     {
         let Self { page, per_page, .. } = self;
         let results = self.load::<(U, i64)>(conn)?;
-        let num_total = results.get(0).map(|x| x.1).unwrap_or(0);
+        let num_total = results.first().map(|x| x.1).unwrap_or(0);
         let items = results.into_iter().map(|x| x.0).collect();
         Ok(Paginated {
-            page: self.page,
-            per_page: self.per_page,
+            page,
+            per_page,
             items,
             num_total,
         })

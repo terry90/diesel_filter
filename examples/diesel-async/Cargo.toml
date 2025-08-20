@@ -1,5 +1,5 @@
 [package]
-name = "diesel-filter-example-async"
+name = "diesel_filter_example_async"
 version = "0.1.0"
 edition = "2024"
 publish = false
@@ -8,8 +8,8 @@ publish = false
 anyhow = "1.0.98"
 diesel = { version = "2", features = ["uuid"] }
 diesel-async = { version = "0.6.1", features = ["postgres"] }
-diesel-filter = { path = "../../diesel-filter", features = ["serde", "utoipa"] }
-diesel-filter-test-db = { path = "../db", features = ["utoipa"] }
+diesel_filter = { path = "../../diesel_filter", features = ["serde", "utoipa"] }
+diesel_filter_test_db = { path = "../db", features = ["utoipa"] }
 serde = { version = "1.0", features = ["derive"] }
 tokio = { version = "1.47.1", features = ["macros", "rt-multi-thread"] }
 tracing = "0.1.41"

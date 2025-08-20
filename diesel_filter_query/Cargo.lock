@@ -38,7 +38,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "diesel-filter-query"
+name = "diesel_filter_query"
 version = "2.0.0"
 dependencies = [
  "darling",

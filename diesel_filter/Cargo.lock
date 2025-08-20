@@ -150,16 +150,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "diesel-filter"
+name = "diesel_filter"
 version = "2.0.0"
 dependencies = [
- "diesel-filter-query",
+ "diesel_filter_query",
  "serde",
  "serde_with",
 ]
 
 [[package]]
-name = "diesel-filter-query"
+name = "diesel_filter_query"
 version = "2.0.0"
 dependencies = [
  "darling 0.21.1",

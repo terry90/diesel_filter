@@ -1,5 +1,5 @@
 [package]
-name = "diesel-filter-query"
+name = "diesel_filter_query"
 version = "2.0.0"
 authors = ["Terry Raimondo <terry.raimondo@gmail.com>"]
 edition = "2024"

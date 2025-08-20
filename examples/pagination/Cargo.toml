@@ -1,5 +1,5 @@
 [package]
-name = "diesel-pagination-example"
+name = "diesel_pagination_example"
 version = "0.1.0"
 edition = "2024"
 publish = false
@@ -9,9 +9,9 @@ anyhow = "1.0.98"
 diesel = { version = "2", features = ["uuid"] }
 diesel-async = { version = "0.6.1", features = ["postgres"] }
 diesel-derive-newtype = "2.1.2"
-diesel-filter = { path = "../../diesel-filter", features = ["utoipa"] }
-diesel-filter-test-db = { path = "../db", features = ["utoipa"] }
-diesel-pagination = { path = "../../diesel-pagination", features = [
+diesel_filter = { path = "../../diesel_filter", features = ["utoipa"] }
+diesel_filter_test_db = { path = "../db", features = ["utoipa"] }
+diesel_pagination = { path = "../../diesel_pagination", features = [
     "diesel-async",
     "serde",
     "utoipa",

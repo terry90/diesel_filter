@@ -1,4 +1,4 @@
-# `diesel-filter`
+# `diesel_filter`
 
 Diesel filter is a quick way to add filters and pagination to your diesel models.
 Works with `diesel` and `Postgres`.
@@ -11,14 +11,14 @@ Works with `diesel` and `Postgres`.
 
 ## Changes in 2.0
 
-* Pagination was moved to a new crate called `diesel-pagination`, see new usage below.
+* Pagination was moved to a new crate called `diesel_pagination`, see new usage below.
 
 ## Usage & Examples
 
 Cargo.toml
 
 ```toml
-diesel-filter = { path = "../../diesel_filter/diesel-filter", features = ["serialize", "rocket"] }
+diesel_filter = { path = "../../diesel_filter/diesel_filter", features = ["serialize", "rocket"] }
 ```
 
 Derive your struct with `DieselFilter` and annotate the fields that will be used as filters.
@@ -70,7 +70,7 @@ N.B: unlike the `rocket` integration, the query parameters must be sent unscoppe
 
 ### Pagination
 
-The `diesel-pagination` crate exports a trait with `paginate` and `load_and_count` methods.
+The `diesel_pagination` crate exports a trait with `paginate` and `load_and_count` methods.
 
 ```rust
 use diesel_pagination::Paginate;

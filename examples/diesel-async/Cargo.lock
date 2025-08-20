@@ -362,55 +362,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "diesel-filter"
-version = "2.0.0"
-dependencies = [
- "diesel-filter-query",
- "serde",
-]
-
-[[package]]
-name = "diesel-filter-example-async"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "diesel",
- "diesel-async",
- "diesel-filter",
- "diesel-filter-test-db",
- "serde",
- "tokio",
- "tracing",
- "tracing-subscriber",
- "utoipa",
- "uuid",
-]
-
-[[package]]
-name = "diesel-filter-query"
-version = "2.0.0"
-dependencies = [
- "darling 0.21.1",
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
-name = "diesel-filter-test-db"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "diesel",
- "diesel-derive-newtype",
- "serde",
- "testcontainers",
- "testcontainers-modules",
- "tracing",
- "utoipa",
-]
-
-[[package]]
 name = "diesel_derives"
 version = "2.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -421,6 +372,55 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "diesel_filter"
+version = "2.0.0"
+dependencies = [
+ "diesel_filter_query",
+ "serde",
+]
+
+[[package]]
+name = "diesel_filter_example_async"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "diesel",
+ "diesel-async",
+ "diesel_filter",
+ "diesel_filter_test_db",
+ "serde",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "utoipa",
+ "uuid",
+]
+
+[[package]]
+name = "diesel_filter_query"
+version = "2.0.0"
+dependencies = [
+ "darling 0.21.1",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "diesel_filter_test_db"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "diesel",
+ "diesel-derive-newtype",
+ "serde",
+ "testcontainers",
+ "testcontainers-modules",
+ "tracing",
+ "utoipa",
 ]
 
 [[package]]

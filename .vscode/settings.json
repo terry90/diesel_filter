@@ -1,7 +1,8 @@
 {
     "rust-analyzer.linkedProjects": [
-        "./diesel-filter/Cargo.toml",
-        "./diesel-filter-query/Cargo.toml",
+        "./diesel_filter/Cargo.toml",
+        "./diesel_filter_query/Cargo.toml",
+        "./diesel_pagination/Cargo.toml",
         "./examples/diesel-async/Cargo.toml",
         "./examples/diesel-sync/Cargo.toml",
         "./examples/pagination/Cargo.toml"

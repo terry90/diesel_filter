@@ -1,5 +1,5 @@
 [package]
-name = "diesel-pagination"
+name = "diesel_pagination"
 version = "2.0.0"
 edition = "2024"
 
